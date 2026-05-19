@@ -1,0 +1,13 @@
+# Used together with docker-compose.yml in local development:
+#   docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml up
+services:
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: dev
+      RABBITMQ_DEFAULT_PASS: dev
+
+  redis:
+    command: ["redis-server", "--save", "", "--appendonly", "no"]  # in-memory only in dev

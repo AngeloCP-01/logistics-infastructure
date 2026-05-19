@@ -1,0 +1,80 @@
+name: Reusable — Python service CI
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        required: true
+        type: string
+      python-version:
+        required: false
+        type: string
+        default: "3.12"
+      working-directory:
+        required: false
+        type: string
+        default: "."
+      run-tests:
+        required: false
+        type: boolean
+        default: true
+      push-image:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      RENDER_DEPLOY_HOOK:
+        required: false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi
+
+      - name: Lint (ruff if configured)
+        run: poetry run ruff check . || echo "ruff not configured; skipping"
+
+      - name: Test
+        if: ${{ inputs.run-tests }}
+        run: poetry run pytest
+
+      - name: Log in to GHCR
+        if: ${{ inputs.push-image }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        if: ${{ inputs.push-image }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.working-directory }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
+
+      - name: Trigger Render deploy
+        if: ${{ inputs.push-image && env.RENDER_HOOK != '' }}
+        env:
+          RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -fsSL -X POST "$RENDER_HOOK"

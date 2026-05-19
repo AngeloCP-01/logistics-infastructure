@@ -1,0 +1,18 @@
+# Node
+node_modules/
+npm-debug.log*
+dist/
+*.tsbuildinfo
+
+# Docker volumes mounted into project (local data)
+.data/
+.volumes/
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Env
+.env
+.env.local

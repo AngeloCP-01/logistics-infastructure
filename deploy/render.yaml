@@ -1,0 +1,28 @@
+# Render Blueprint for the AI Logistics Platform.
+# Each service is added to this file during its own implementation phase.
+# Phase 0 ships only the gateway placeholder (commented) so the file is valid.
+
+services:
+  - type: web
+    name: gateway
+    runtime: image
+    image:
+      url: ghcr.io/<gh-org>/logistics-gateway:latest
+    plan: starter
+    autoDeploy: false   # Manual deploy via webhook from GH Actions
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      # Service-specific vars added in Phase 2 (Gateway phase)
+    healthCheckPath: /healthz
+
+# Future services (filled in their respective phases):
+#  - auth-service
+#  - user-service
+#  - order-service
+#  - dispatch-service
+#  - tracking-service
+#  - notification-service
+#  - ai-service

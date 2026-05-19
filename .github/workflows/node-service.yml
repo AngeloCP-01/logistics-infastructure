@@ -1,0 +1,91 @@
+name: Reusable — Node service CI
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        required: true
+        type: string
+        description: Service name; used as image name and Render webhook key
+      node-version:
+        required: false
+        type: string
+        default: "20"
+      working-directory:
+        required: false
+        type: string
+        default: "."
+      run-tests:
+        required: false
+        type: boolean
+        default: true
+      push-image:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      RENDER_DEPLOY_HOOK:
+        required: false
+        description: Optional Render deploy webhook URL
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Type-check
+        run: npm run typecheck --if-present
+
+      - name: Test
+        if: ${{ inputs.run-tests }}
+        run: npm test --if-present
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Set up Docker Buildx
+        if: ${{ inputs.push-image }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: ${{ inputs.push-image }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        if: ${{ inputs.push-image }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.working-directory }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
+
+      - name: Trigger Render deploy
+        if: ${{ inputs.push-image && env.RENDER_HOOK != '' }}
+        env:
+          RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -fsSL -X POST "$RENDER_HOOK"

@@ -1,0 +1,22 @@
+name: Example — hello-world service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/hello-world-service/**'
+      - '.github/workflows/example-hello-world.yml'
+      - '.github/workflows/node-service.yml'
+  pull_request:
+    paths:
+      - 'examples/hello-world-service/**'
+      - '.github/workflows/node-service.yml'
+
+jobs:
+  ci:
+    uses: ./.github/workflows/node-service.yml
+    with:
+      service-name: hello-world-service
+      working-directory: examples/hello-world-service
+      push-image: false   # don't push from the example
+    secrets: inherit

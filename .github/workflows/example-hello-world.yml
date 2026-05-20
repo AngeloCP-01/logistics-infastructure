@@ -14,6 +14,9 @@ on:
 
 jobs:
   ci:
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/node-service.yml
     with:
       service-name: hello-world-service

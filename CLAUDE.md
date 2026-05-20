@@ -31,7 +31,7 @@ This repo has NO service code of its own. The hello-world example exists only to
 
 - **Local broker**: RabbitMQ 3.13 (management image), exposed on 5672 (AMQP) and 15672 (UI). Dev creds: `dev`/`dev`.
 - **Local Redis**: Redis 7-alpine on 6379. Dev mode runs in-memory (no persistence).
-- **Container registry**: GHCR (`ghcr.io/<gh-org>/<service>:<sha>` + `:latest`).
+- **Container registry**: GHCR (`ghcr.io/angelocp-01/<service>:<sha>` + `:latest`).
 - **Render**: each service is its own Render service; deploy webhook stored as `RENDER_DEPLOY_HOOK` in each service repo's secrets.
 - **Reusable workflow inputs**: `service-name`, `working-directory`, `run-tests`, `push-image`, `node-version` (or `python-version`).
 - **Shared ESLint**: ESLint 9 flat config. Node services import it from this repo.
@@ -78,7 +78,7 @@ name: CI
 on: [push, pull_request]
 jobs:
   ci:
-    uses: <gh-org>/logistics-infrastructure/.github/workflows/node-service.yml@main
+    uses: angelocp-01/logistics-infrastructure/.github/workflows/node-service.yml@main
     with:
       service-name: my-service
     secrets: inherit

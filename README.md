@@ -36,7 +36,7 @@ name: CI
 on: [push, pull_request]
 jobs:
   ci:
-    uses: <gh-org>/logistics-infrastructure/.github/workflows/node-service.yml@main
+    uses: angelocp-01/logistics-infrastructure/.github/workflows/node-service.yml@main
     with:
       service-name: my-service
     secrets: inherit

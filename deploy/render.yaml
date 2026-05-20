@@ -7,7 +7,7 @@ services:
     name: gateway
     runtime: image
     image:
-      url: ghcr.io/<gh-org>/logistics-gateway:latest
+      url: ghcr.io/angelocp-01/logistics-gateway:latest
     plan: starter
     autoDeploy: false   # Manual deploy via webhook from GH Actions
     envVars:

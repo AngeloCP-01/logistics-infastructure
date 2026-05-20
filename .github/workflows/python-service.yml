@@ -32,6 +32,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
@@ -75,6 +77,4 @@ jobs:
 
       - name: Trigger Render deploy
         if: ${{ inputs.push-image && env.RENDER_HOOK != '' }}
-        env:
-          RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: curl -fsSL -X POST "$RENDER_HOOK"

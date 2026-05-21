@@ -36,6 +36,18 @@ This repo has NO service code of its own. The hello-world example exists only to
 - **Reusable workflow inputs**: `service-name`, `working-directory`, `run-tests`, `push-image`, `node-version` (or `python-version`).
 - **Shared ESLint**: ESLint 9 flat config. Node services import it from this repo.
 
+## Canonical shared configs (vendored by services)
+
+Files in `shared/` are the source-of-truth that every Node service vendors. The platform decision (auth-service spec §15.1, coding-conventions §22) is **vendor + manual sync**: each service repo has its own copy because Docker COPY can't reach outside the build context in a polyrepo model.
+
+| Canonical file               | Vendored at                     |
+| ---------------------------- | ------------------------------- |
+| `shared/tsconfig.base.json`  | `<service>/tsconfig.base.json`  |
+| `shared/eslint.config.mjs`   | `<service>/eslint.config.mjs`   |
+| `shared/prettier.config.mjs` | `<service>/prettier.config.mjs` |
+
+**When you change a canonical file:** propagation is manual. Open a follow-up PR in each affected service repo copying the new content. Drift detection is a YAGNI candidate — add only if drift actually causes incidents.
+
 ## Layout (after Phase 0 ships)
 
 ```

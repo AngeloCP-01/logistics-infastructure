@@ -1,7 +1,8 @@
-// Shared ESLint 9 flat config. Service repos import via:
-//   import shared from "../../logistics-infrastructure/shared/eslint.config.mjs";
-//   export default [...shared];
-// In CI, the service repo vendors this file (npm install or git submodule is overkill for v1).
+// CANONICAL — DO NOT EDIT IN VENDORED COPIES.
+// Source-of-truth for the platform's shared ESLint 9 flat config.
+// All Node services vendor a copy of this file at their repo root.
+// When this file changes, propagation is manual (copy into each service in its next PR).
+// See coding-conventions.md §22 + decomposition spec for the rationale.
 
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";

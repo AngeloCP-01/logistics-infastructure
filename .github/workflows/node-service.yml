@@ -49,6 +49,8 @@ jobs:
           cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
 
       - name: Install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm ci
 
       - name: Lint
@@ -82,6 +84,8 @@ jobs:
         with:
           context: ${{ inputs.working-directory }}
           push: true
+          secrets: |
+            NODE_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:latest

@@ -78,6 +78,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute image base (lowercase owner)
+        if: ${{ inputs.push-image }}
+        id: image_base
+        run: |
+          owner="${{ github.repository_owner }}"
+          echo "value=ghcr.io/${owner,,}/${{ inputs.service-name }}" >> "$GITHUB_OUTPUT"
+
       - name: Build and push image
         if: ${{ inputs.push-image }}
         uses: docker/build-push-action@v5
@@ -87,8 +94,8 @@ jobs:
           secrets: |
             NODE_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
+            ${{ steps.image_base.outputs.value }}:${{ github.sha }}
+            ${{ steps.image_base.outputs.value }}:latest
 
       - name: Trigger Render deploy
         if: ${{ inputs.push-image && env.RENDER_HOOK != '' }}

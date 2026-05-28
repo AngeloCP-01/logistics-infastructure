@@ -4,19 +4,32 @@
 
 services:
   - type: web
-    name: gateway
-    runtime: image
-    image:
-      url: ghcr.io/angelocp-01/logistics-gateway:latest
-    plan: starter
-    autoDeploy: false   # Manual deploy via webhook from GH Actions
+    name: logistics-gateway
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /readyz
+    autoDeploy: true
+    dockerCommand: node dist/server.js
     envVars:
       - key: NODE_ENV
         value: production
+      - key: GATEWAY_PORT
+        value: "10000"
+      - key: JWT_SECRET
+        sync: false
+      - key: SERVICE_JWT_SECRET
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: AUTH_SERVICE_URL
+        value: http://logistics-auth-service:8080
+      - key: USER_SERVICE_URL
+        value: http://logistics-user-service:8080
+      - key: GATEWAY_CORS_ORIGINS
+        sync: false
       - key: LOG_LEVEL
         value: info
-      # Service-specific vars added in Phase 2 (Gateway phase)
-    healthCheckPath: /healthz
 
 # Future services (filled in their respective phases):
 #  - auth-service

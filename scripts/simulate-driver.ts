@@ -61,7 +61,15 @@ async function main(): Promise<void> {
   const args = parseArgs();
   const token = jwt.sign({ role: "driver" }, args.secret, { algorithm: "HS256", subject: args.driver, expiresIn: "1h" });
 
-  const socket: Socket = io(args.url, { auth: { token }, transports: ["websocket"], reconnection: true });
+  // The tracking-service socket.io server listens at /v1/tracking/socket.io/ (it owns the
+  // full gateway path — the gateway WS proxy forwards /v1/tracking/socket.io/ pass-through,
+  // no strip). This path is correct whether --url points at the service directly or the gateway.
+  const socket: Socket = io(args.url, {
+    path: "/v1/tracking/socket.io/",
+    auth: { token },
+    transports: ["websocket"],
+    reconnection: true,
+  });
 
   socket.on("connect_error", (err) => {
     process.stderr.write(`connect_error: ${err.message}\n`);

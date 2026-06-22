@@ -1,6 +1,6 @@
 # Render Blueprint for the AI Logistics Platform.
-# Each service is added to this file during its own implementation phase.
-# Phase 0 ships only the gateway placeholder (commented) so the file is valid.
+# All 7 backend services are declared here with config keys only — NO secret values.
+# Secrets are marked sync: false and must be set in the Render dashboard before first deploy.
 
 services:
   - type: web
@@ -16,6 +16,10 @@ services:
         value: production
       - key: GATEWAY_PORT
         value: "10000"
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_SERVICE_NAME
+        value: logistics-gateway
       - key: JWT_SECRET
         sync: false
       - key: SERVICE_JWT_SECRET
@@ -26,18 +30,212 @@ services:
         value: http://logistics-auth-service:8080
       - key: USER_SERVICE_URL
         value: http://logistics-user-service:8080
+      - key: ORDER_SERVICE_URL
+        value: http://logistics-order-service:8080
+      - key: DISPATCH_SERVICE_URL
+        value: http://logistics-dispatch-service:8080
       - key: TRACKING_SERVICE_URL
         value: http://logistics-tracking-service:8080
+      - key: NOTIFICATION_SERVICE_URL
+        value: http://logistics-notification-service:8080
       - key: GATEWAY_CORS_ORIGINS
         sync: false
+      - key: GATEWAY_PROXY_TIMEOUT_MS
+        value: "10000"
+      - key: GATEWAY_RETRY_DELAY_MS
+        value: "250"
+      - key: GATEWAY_ANON_RPM
+        value: "60"
+      - key: GATEWAY_AUTH_RPM
+        value: "300"
+      - key: GATEWAY_RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: GATEWAY_SHUTDOWN_GRACE_MS
+        value: "10000"
+
+  - type: web
+    name: logistics-auth-service
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /readyz
+    autoDeploy: true
+    dockerCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_PORT
+        value: "8080"
       - key: LOG_LEVEL
         value: info
+      - key: LOG_SERVICE_NAME
+        value: auth-service
+      - key: AUTH_DB_URL
+        sync: false
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: AUTH_SERVICE_JWT_SECRET
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: AUTH_SEED_ADMIN_EMAIL
+        sync: false
+      - key: AUTH_SEED_ADMIN_PASSWORD
+        sync: false
+      # Dev-only flags — must be false (or absent) in production.
+      # Declared here so a misconfigured deploy fails the boot check rather than silently sending tokens.
+      - key: AUTH_RETURN_RESET_TOKEN
+        sync: false
+      - key: AUTH_RETURN_VERIFICATION_TOKEN
+        sync: false
 
-# Future services (filled in their respective phases):
-#  - auth-service
-#  - user-service
-#  - order-service
-#  - dispatch-service
-#  - tracking-service
-#  - notification-service
-#  - ai-service
+  - type: web
+    name: logistics-user-service
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /readyz
+    autoDeploy: true
+    dockerCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_SERVICE_NAME
+        value: user-service
+      - key: USER_DB_URL
+        sync: false
+      - key: USER_JWT_SECRET
+        sync: false
+      - key: USER_SERVICE_JWT_SECRET
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+
+  - type: web
+    name: logistics-order-service
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /readyz
+    autoDeploy: true
+    dockerCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_SERVICE_NAME
+        value: order-service
+      - key: ORDER_DB_URL
+        sync: false
+      - key: ORDER_JWT_SECRET
+        sync: false
+      - key: SERVICE_JWT_SECRET
+        sync: false
+      # In production, order-service calls user-service through the gateway.
+      - key: ORDER_USER_SERVICE_URL
+        value: http://logistics-gateway:8080
+      - key: RABBITMQ_URL
+        sync: false
+
+  - type: web
+    name: logistics-dispatch-service
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /readyz
+    autoDeploy: true
+    dockerCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_SERVICE_NAME
+        value: dispatch-service
+      - key: DISPATCH_DB_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SERVICE_JWT_SECRET
+        sync: false
+      # In production, dispatch-service calls user-service through the gateway.
+      - key: DISPATCH_USER_SERVICE_URL
+        value: http://logistics-gateway:8080
+      - key: RABBITMQ_URL
+        sync: false
+      - key: DISPATCH_OFFER_TTL_SECONDS
+        value: "30"
+      - key: DISPATCH_MAX_OFFER_ATTEMPTS
+        value: "3"
+
+  # plan: paid — free tier drops WebSocket connections on spin-down
+  - type: web
+    name: logistics-tracking-service
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /readyz
+    autoDeploy: true
+    dockerCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_SERVICE_NAME
+        value: tracking-service
+      - key: TRACKING_MONGO_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: TRACKING_LOCATION_TTL_DAYS
+        value: "30"
+
+  - type: web
+    name: logistics-notification-service
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /readyz
+    autoDeploy: true
+    dockerCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_SERVICE_NAME
+        value: notification-service
+      - key: NOTIF_MONGO_URL
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: NOTIF_EMAIL_PROVIDER
+        value: resend
+      - key: NOTIF_RESEND_API_KEY
+        sync: false
+      - key: NOTIF_EMAIL_FROM
+        sync: false

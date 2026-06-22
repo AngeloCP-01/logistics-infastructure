@@ -57,3 +57,5 @@ jobs:
 ## Render deploys
 
 Each service uses its own Render service. Set `RENDER_DEPLOY_HOOK` as a repo secret pointing to the service's deploy webhook; the reusable workflow will trigger it after a successful push to GHCR.
+
+> Part of the [AI Logistics & Delivery Management Platform](https://github.com/AngeloCP-01/logistics-web#readme) — see the web repo for the full architecture overview.
